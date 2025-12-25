@@ -8,3 +8,6 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Any file or folder starting with a dot
+.*
