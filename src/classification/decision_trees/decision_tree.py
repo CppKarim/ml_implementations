@@ -6,7 +6,7 @@ from sklearn.datasets import load_iris,load_wine,load_breast_cancer
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-from typing import Optional
+from typing import Optional,List
 import argparse
 from enum import Enum
 import time
@@ -67,6 +67,17 @@ def visualize_tree(tree:TreeNode,depth=0)->None:
         visualize_tree(tree.left, depth+1)
         visualize_tree(tree.right, depth+1)
 
+def visualize_sweep(accuracies:List[float],num_classes:int=None):
+    accuracies_np = np.array(accuracies)
+    plt.scatter(accuracies_np[:, 0], accuracies_np[:, 1],label="Tree accuracy")
+    plt.xlabel('Maximum tree depth')
+    plt.ylabel('Accuracy')
+    if num_classes is not None and num_classes > 1:
+        random_acc = 1.0 / num_classes
+        plt.axhline(random_acc, color='red', linestyle='--', label=f'Random Accuracy ({random_acc:.2f})')
+    plt.legend()
+    plt.show()
+
 def get_profiler(device:str,algorithm:TreeAlg):
     return torch.profiler.profile(
             activities=[
@@ -90,11 +101,13 @@ if __name__ == "__main__":
     parser.add_argument('--profile', action='store_true', help='Whether to profile the code using the pytorch profiler')
     parser.add_argument('--log', type=int, default=1, choices=[0,1,2,3], help='Level of output logs')
     parser.add_argument('--device', type=str, default='cpu',choices=['cpu','cuda'] , help='cpu or cuda')
+    parser.add_argument('--sweep', action='store_true', help='Sweep through values of k')
     args = parser.parse_args()
     dataset_name = Dataset[args.dataset]
     algorithm = TreeAlg[args.algorithm]
     to_profile = args.profile
     max_depth = args.max_depth
+    sweep = args.sweep
     
     # Initialization
     torch.manual_seed(42)
@@ -107,33 +120,39 @@ if __name__ == "__main__":
     data = data.to(device)
     labels = labels.to(device)
 
-    if to_profile:
-            prof = get_profiler(device,algorithm)
+    if sweep:
+        trees = [learn_tree(data,labels,max_depth=ind,log_level=0) for ind in range(max_depth)]
+        eval_results = [classify_dataset(tree,data,labels) for tree in trees]
+        accuracies = [(i,results.accuracy()) for i,results in enumerate(eval_results)]
+        visualize_sweep(accuracies,num_classes=len(labels.unique())) 
+    else:
+        if to_profile:
+                prof = get_profiler(device,algorithm)
+                start = time.time()
+                prof.start()
+                tree = learn_tree(
+                    data,
+                    labels,
+                    max_depth=max_depth,
+                    log_level=args.log,
+                )
+                prof.stop()
+                end = time.time()
+
+                print(f"{algorithm.name} runtime:{end-start} seconds")
+                print(prof.key_averages().table())
+        else:
             start = time.time()
-            prof.start()
             tree = learn_tree(
                 data,
                 labels,
                 max_depth=max_depth,
                 log_level=args.log,
             )
-            prof.stop()
             end = time.time()
 
             print(f"{algorithm.name} runtime:{end-start} seconds")
-            print(prof.key_averages().table())
-    else:
-        start = time.time()
-        tree = learn_tree(
-            data,
-            labels,
-            max_depth=max_depth,
-            log_level=args.log,
-        )
-        end = time.time()
 
-        print(f"{algorithm.name} runtime:{end-start} seconds")
-
-    # Evaluate the learned means 
-    results = evaluate_tree(tree,data,labels)
+        # Evaluate the learned means 
+        results = evaluate_tree(tree,data,labels)
 
