@@ -7,6 +7,15 @@ class TreeNode:
         self.left = left
         self.right = right
         self.value = value # Leaf node has value not None, internal node has value None
+    
+    def get_depth(self):
+        if self.value is not None:
+            return 1
+        left_depth = self.left.get_depth() if self.left is not None else 0
+        right_depth = self.right.get_depth() if self.right is not None else 0
+        return 1 + max(left_depth, right_depth)
+        
+
 
 # Learn a decision tree using CART (binary splits, Gini impurity)
 def CART(
@@ -16,7 +25,7 @@ def CART(
     max_depth:int = None,
     ):
     # If all labels are the same decision tree is trivial
-    if len(set(labels.tolist())) == 1:
+    if (labels==0).all() or (labels==1).all():
         return TreeNode(value=labels[0].item())
 
     # If max depth reached or no features left, return majority class
@@ -64,6 +73,7 @@ def ID3(
     depth:int = 0,
     max_depth:int = None,
     )->TreeNode:
+    # If all labels are the same decision tree is trivial
     if (labels==0).all() or (labels==1).all():
         return TreeNode(value = labels[0].item())
     
