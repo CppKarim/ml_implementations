@@ -43,8 +43,8 @@ def get_data(dataset: Dataset = Dataset.IRIS, N:Optional[int]=100, dim:Optional[
         for col in df.select_dtypes(include=['object']).columns:
             df[col] = LabelEncoder().fit_transform(df[col].astype(str))
         df = df.dropna()
-        labels = torch.tensor(df['survived'].values, dtype=torch.long)
-        data = torch.tensor(df.drop('survived', axis=1).values, dtype=torch.float32)
+        labels = torch.tensor(df['survived'].astype(np.int64).values, dtype=torch.long)
+        data = torch.tensor(df.drop('survived', axis=1).astype(np.float32).values, dtype=torch.float32)
     elif dataset == Dataset.RANDOM:
         data = torch.rand((N, dim))
         labels = torch.randint(0, 2, (N,))
