@@ -176,7 +176,7 @@ if __name__ == "__main__":
 
     # Prepare data
     data = get_data(dataset_name,N=N,dim=dim) # N by dim data tensor
-    data.to(device)
+    data = data.to(device)
 
     # Learn the means from the data
     if sweep:
