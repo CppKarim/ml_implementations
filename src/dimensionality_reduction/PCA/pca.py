@@ -24,25 +24,35 @@ class PCA_Matrix:
     #def recover(self,x:torch.Tensor)->torch.Tensor:
         #return self.A.T@x
 
-class PcaAlg(Enum):
-    A_MAT = 0
-    B_MAT = 1
+
+class PCA_Algorithm(Enum):
+    vanilla = 0
 
 def pca(
     data: torch.Tensor,
     n:int,
-    algorithm : PcaAlg = PcaAlg.A_MAT,
+    algorithm:PCA_Algorithm=PCA_Algorithm.vanilla,
     log_level : Optional[int] = 0,
     )-> Tuple[PCA_Matrix,torch.Tensor]:
-    n = min(n,data.size(0))
-    if algorithm==PcaAlg.A_MAT:
+    points, features = data.size()
+    n = min(n,data.size(0),data.size(1))
+    if n<0:
+        raise(ValueError(f"n must be non negative, got {n} instead"))
+    if n==0:
+        return torch.tensor(0),torch.tensor(0)
+    if points>features:
         A = data.T @ data
         U,S,Vh = torch.linalg.svd(A,full_matrices=False)
-        #mask = torch.zeros_like(S)
-        #mask[:n,:n]=torch.eye(n)
-        return Vh[:n],S[:n].sum()/S.sum()
+        components =  Vh[:n]
+        variance = S[:n].sum()/S.sum() 
+        return components,variance
     else:
-        raise(NotImplementedError(f"Algorithm {algorithm.name} is not implemented"))
+        B = data @ data.T
+        U,S,Vh = torch.linalg.svd(B,full_matrices=False)
+        components = Vh[:n]@data
+        components = components/torch.norm(components,p=2,dim=1,keepdim=True)
+        variance = S[:n].sum()/S.sum() 
+        return components,variance
 
 # Inference function for decision tree
 def compress_vector(pca_matrix:PCA_Matrix, x)->torch.Tensor:
@@ -75,7 +85,7 @@ def visualize_sweep(accuracies:List[float]):
     plt.legend()
     plt.show()
 
-def get_profiler(device:str,algorithm:PcaAlg):
+def get_profiler(device:str,algorithm:PCA_Algorithm):
     return torch.profiler.profile(
             activities=[
                 ProfilerActivity.CPU,
@@ -94,14 +104,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Decision Tree classification")
     parser.add_argument('--dataset', type=str,choices = [d.name for d in Dataset], default='WINE', help='Name of dataset to be used')
     parser.add_argument('--n', type=int, default=3, help='Number of components to keep')
-    parser.add_argument('--algorithm', type=str, choices=[a.name for a in PcaAlg], default='A_MAT', help='Which algorithm to use to learn the SVM halfspace')
+    parser.add_argument('--algorithm', type=str, choices=[a.name for a in PCA_Algorithm], default='vanilla', help='Which algorithm to use to learn the SVM halfspace')
     parser.add_argument('--profile', action='store_true', help='Whether to profile the code using the pytorch profiler')
     parser.add_argument('--log', type=int, default=1, choices=[0,1,2,3], help='Level of output logs')
     parser.add_argument('--device', type=str, default='cpu',choices=['cpu','cuda'] , help='cpu or cuda')
     parser.add_argument('--sweep', action='store_true', help='Sweep through values of k')
     args = parser.parse_args()
     dataset_name = Dataset[args.dataset]
-    algorithm = PcaAlg[args.algorithm]
+    algorithm = PCA_Algorithm[args.algorithm]
     n = args.n
     to_profile = args.profile
     sweep = args.sweep
@@ -117,7 +127,10 @@ if __name__ == "__main__":
     data = data.to(device)
 
     if sweep:
-        retained_vars = [(i,pca(data,i,algorithm=algorithm,log_level=0)[1]) for i in tqdm(range(0,n))]
+        start = time.time()
+        retained_vars = [(i,pca(data,i,algorithm=algorithm,log_level=0)[1].cpu()) for i in tqdm(range(0,n))]
+        end = time.time()
+        print(f"{algorithm.name} sweep runtime:{end-start} seconds")
         visualize_sweep(retained_vars) 
     else:
         if to_profile:
@@ -148,7 +161,5 @@ if __name__ == "__main__":
             print(f"{algorithm.name} runtime:{end-start} seconds")
 
         # Evaluate the learned means 
-        import pdb
-        pdb.set_trace()
         results = evaluate_pca(pca_matrix,data)
 
