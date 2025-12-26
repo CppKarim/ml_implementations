@@ -12,7 +12,7 @@ from enum import Enum
 import time
 
 from src.utils.data import get_data,Dataset
-from src.utils.decision_tree_algs import CART,TreeNode
+from src.utils.decision_tree_algs import TreeNode,CART,ID3
 from src.utils.classification import ClassificationResults
 
 class TreeAlg(Enum):
@@ -31,6 +31,8 @@ def learn_tree(
     )-> TreeNode:
     if algorithm==TreeAlg.CART:
         return CART(data,labels,depth,max_depth)
+    if algorithm==TreeAlg.ID3:
+        return ID3(data,labels,depth,max_depth)
     else:
         raise(NotImplementedError(f"Algorithm {algorithm.name} is not implemented"))
 
@@ -53,7 +55,7 @@ def evaluate_tree(tree:TreeNode,data:torch.Tensor,labels:torch.Tensor)->Classifi
     eval_results = classify_dataset(tree,data,labels)
     eval_results.print_confusion_matrix()
     print(f"Tree accuracy: {eval_results.accuracy()}")
-    #visualize_tree(tree)
+    visualize_tree(tree)
     
     return eval_results
 
@@ -121,7 +123,7 @@ if __name__ == "__main__":
     labels = labels.to(device)
 
     if sweep:
-        trees = [learn_tree(data,labels,max_depth=ind,log_level=0) for ind in range(max_depth)]
+        trees = [learn_tree(data,labels,max_depth=ind,algorithm=algorithm,log_level=0) for ind in range(max_depth)]
         eval_results = [classify_dataset(tree,data,labels) for tree in trees]
         accuracies = [(i,results.accuracy()) for i,results in enumerate(eval_results)]
         visualize_sweep(accuracies,num_classes=len(labels.unique())) 
@@ -134,6 +136,7 @@ if __name__ == "__main__":
                     data,
                     labels,
                     max_depth=max_depth,
+                    algorithm=algorithm,
                     log_level=args.log,
                 )
                 prof.stop()
@@ -147,6 +150,7 @@ if __name__ == "__main__":
                 data,
                 labels,
                 max_depth=max_depth,
+                algorithm=algorithm,
                 log_level=args.log,
             )
             end = time.time()
