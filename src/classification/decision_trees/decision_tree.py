@@ -11,7 +11,7 @@ import argparse
 from enum import Enum
 import time
 
-from src.utils.data import get_data,Dataset
+from src.utils.data import get_data,ClassificationDataset
 from src.utils.decision_tree_algs import TreeNode,CART,ID3
 from src.utils.classification import ClassificationResults
 
@@ -97,7 +97,7 @@ def get_profiler(device:str,algorithm:TreeAlg):
 if __name__ == "__main__":
     # User input
     parser = argparse.ArgumentParser(description="Decision Tree classification")
-    parser.add_argument('--dataset', type=str,choices = [d.name for d in Dataset], default='IRIS', help='Name of dataset to be used')
+    parser.add_argument('--dataset', type=str,choices = [d.name for d in ClassificationDataset], default='IRIS', help='Name of dataset to be used')
     parser.add_argument('--algorithm', type=str, choices=[a.name for a in TreeAlg], default='CART', help='Which algorithm to learn the decision tree')
     parser.add_argument('--max_depth', type=int, default=None, help='Maximum tree depth')
     parser.add_argument('--profile', action='store_true', help='Whether to profile the code using the pytorch profiler')
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     parser.add_argument('--device', type=str, default='cpu',choices=['cpu','cuda'] , help='cpu or cuda')
     parser.add_argument('--sweep', action='store_true', help='Sweep through values of k')
     args = parser.parse_args()
-    dataset_name = Dataset[args.dataset]
+    dataset_name = ClassificationDataset[args.dataset]
     algorithm = TreeAlg[args.algorithm]
     to_profile = args.profile
     max_depth = args.max_depth
