@@ -24,5 +24,5 @@ This repository contains clean, modular implementations of classic machine learn
 2. uv run -m src.regression.linear_regression --device cuda
 
 ## References
-[Understanding Machine Learning: From Theory to Algorithms by Shalev-Shwartz and Ben-David](https://www.cs.huji.ac.il/~shais/UnderstandingMachineLearning/)
-[The Elements of Statistical Learning by Hastie,Tibshirani,Friedman] (https://hastie.su.domains/ElemStatLearn/)
+[Understanding Machine Learning: From Theory to Algorithms by Shalev-Shwartz and Ben-David](https://www.cs.huji.ac.il/~shais/UnderstandingMachineLearning/)  
+[The Elements of Statistical Learning by Hastie,Tibshirani,Friedman](https://hastie.su.domains/ElemStatLearn/)
