@@ -15,14 +15,14 @@ from enum import Enum
 import time
 import itertools
 
-from src.utils.data import get_data,Dataset
+from src.utils.data import get_data,ClassificationDataset
 
-class InitAlg(Enum):
+class Initialization_algorithm(Enum):
     RANDOM = "random"
     PLUSPLUS = "plusplus"
     
-def init_means(data:torch.Tensor,k:int,alg:InitAlg = InitAlg.RANDOM):
-    if alg == InitAlg.PLUSPLUS:
+def init_means(data:torch.Tensor,k:int,alg:Initialization_algorithm = Initialization_algorithm.RANDOM):
+    if alg == Initialization_algorithm.PLUSPLUS:
         means = []
         index = torch.randint(0,data.size(0),(1,))
         means.append(data[index].squeeze(0))
@@ -38,6 +38,10 @@ def init_means(data:torch.Tensor,k:int,alg:InitAlg = InitAlg.RANDOM):
         means = data[indices]
     return means
 
+class K_means_algorithm(Enum):
+    LLOYD=0
+    
+
 def k_means(
     data:torch.tensor,
 	k:int,
@@ -49,6 +53,7 @@ def k_means(
     dim = data.size(1)
     #mean = data.mean(dim=0,keepdim=True)
     #std = data.std(dim=0,keepdim=True)
+    
 
     best_means = (None,None)
     for init in tqdm(range(inits),disable=log_level<1):
@@ -150,9 +155,10 @@ if __name__ == "__main__":
     parser.add_argument('--N', type=int, default=100, help='Number of data points')
     parser.add_argument('--dim', type=int, default=2, help='Dimension of data')
     parser.add_argument('--max_iterations', type=int, default=1000, help='Max iterations')
-    parser.add_argument('--dataset', type=str,choices = [d.name for d in Dataset], default='IRIS', help='Name of dataset to be used')
+    parser.add_argument('--dataset', type=str,choices = [d.name for d in ClassificationDataset], default='IRIS', help='Name of dataset to be used')
     parser.add_argument('--epsilon', type=float, default=1e-6, help='Convergence threshold')
-    parser.add_argument('--algorithm', type=str, choices=[a.name for a in InitAlg], default='PLUSPLUS', help='Which algorithm to initialize the means')
+    parser.add_argument('--init_algorithm', type=str, choices=[a.name for a in Initialization_algorithm], default='PLUSPLUS', help='Which algorithm to initialize the means')
+    parser.add_argument('--algorithm', type=str, choices=[a.name for a in K_means_algorithm], default='LLOYD', help='Which algorithm to implement k-means')
     parser.add_argument('--inits', type=int, default=1, help='How many random initializations to perform')
     parser.add_argument('--sweep', action='store_true', help='Sweep through values of k')
     parser.add_argument('--profile', action='store_true', help='Whether to profile the code using the pytorch profiler')
@@ -167,7 +173,7 @@ if __name__ == "__main__":
     inits = args.inits
     sweep = args.sweep
     to_profile = args.profile
-    dataset_name = Dataset[args.dataset]
+    dataset_name = ClassificationDataset[args.dataset]
 
     # Initialization
     torch.manual_seed(42)

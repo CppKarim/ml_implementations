@@ -24,8 +24,8 @@ class BinaryClassificationResults:
     
 class ClassificationResults:
     def __init__(self, labels, predictions):
-        self.labels = np.array(labels)
-        self.predictions = np.array(predictions)
+        self.labels = np.array(labels.cpu())
+        self.predictions = np.array(predictions.cpu())
         self.classes = np.unique(np.concatenate([self.labels, self.predictions]))
         self.confusion = self._compute_confusion_matrix()
         self.total = self.labels.size
