@@ -25,11 +25,11 @@ class Halfplane:
         return x.to(self.device)@self.w + self.b
 
 class Linear_Regression_Algorithm(Enum):
-    LEAST_SQUARES = 0
+    LEAST_SQUARES = 0 # Normal equations
     RIDGE = 1
     LASSO = 2
 
-class Kernel(Enum):
+class feature_map(Enum):
     IDENTITY = 0
     POLYNOMIAL = 1
 
@@ -37,8 +37,8 @@ def polynomial(row:torch.tensor,n:int=3):
     powers = torch.cat([row ** i for i in range(1, n + 1)])
     return powers
 
-kernel_func_map = {
-    Kernel.POLYNOMIAL: polynomial,
+feature_map_func_map = {
+    feature_map.POLYNOMIAL: polynomial,
 }
 
 def learn_halfspace(
@@ -148,7 +148,7 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', type=str,choices = [d.name for d in RegressionDataset], default='DIABETES', help='Name of dataset to be used')
     parser.add_argument('--algorithm', type=str, choices=[a.name for a in Linear_Regression_Algorithm], default='LEAST_SQUARES', help='Which algorithm to use to learn the SVM halfspace')
     parser.add_argument('--Lambda', type=float, default='0.1', help='Complexity parameter for ridge regression (see ESL 3.4.1).')
-    parser.add_argument('--kernel', type=str, choices=[a.name for a in Kernel], default='IDENTITY', help='Kernel for data preprocessing')
+    parser.add_argument('--feature_map', type=str, choices=[a.name for a in feature_map], default='IDENTITY', help='feature_map for data preprocessing')
     parser.add_argument('--n', type=int, default='3', help='Polynomial degree to project data.')
     parser.add_argument('--profile', action='store_true', help='Whether to profile the code using the pytorch profiler')
     parser.add_argument('--log', type=int, default=1, choices=[0,1,2,3], help='Level of output logs')
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     dataset_name = RegressionDataset[args.dataset]
     algorithm = Linear_Regression_Algorithm[args.algorithm]
     Lambda = args.Lambda
-    kernel = Kernel[args.kernel]
+    feature_map = feature_map[args.feature_map]
     to_profile = args.profile
     sweep = args.sweep
     
@@ -170,9 +170,9 @@ if __name__ == "__main__":
 
     # Prepare data
     data,values = get_data_regression(dataset_name) # N by dim data tensor
-    if kernel != Kernel.IDENTITY:
-        kernel_fn = kernel_func_map[kernel]
-        data = torch.stack([kernel_fn(row,args.n) for row in data])
+    if feature_map != feature_map.IDENTITY:
+        feature_map_fn = feature_map_func_map[feature_map]
+        data = torch.stack([feature_map_fn(row,args.n) for row in data])
     data = data.to(device)
     values = values.to(device)
 
