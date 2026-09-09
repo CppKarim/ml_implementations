@@ -1,4 +1,5 @@
-# Implementation of standard attention mechanisms from https://arxiv.org/pdf/1706.03762
+# Implementation of standard attention mechanisms 
+# Cite papers/attention_iayn.pdf, or https://arxiv.org/pdf/1706.03762
 from optparse import Option
 
 import torch 

@@ -89,7 +89,7 @@ def learn_halfspace(
         w = cp.Variable(features)
 
         # Define objective function
-        objective = cp.Minimize(0.5*cp.sum_squares(values.cpu().numpy() - hom_data.cpu().numpy()@w)+Lambda*cp.norm1(w))
+        objective = cp.Minimize(0.5*cp.sum_squares(outputs.cpu().numpy() - hom_data.cpu().numpy()@w)+Lambda*cp.norm1(w))
 
         # Create and solve the problem
         prob = cp.Problem(objective)
