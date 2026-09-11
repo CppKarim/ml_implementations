@@ -11,3 +11,6 @@ wheels/
 
 # Any file or folder starting with a dot
 .*
+
+# Profiler traces (--profile output; contains hostname, PID and GPU details)
+log/
