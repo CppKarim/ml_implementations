@@ -66,7 +66,9 @@ def learn_halfspace(
     if algorithm==Linear_Regression_Algorithm.RIDGE:
         if Lambda==None:
             raise(ValueError(f"Complexity parameter Lambda must be defined for ridge regression, instead got {Lambda}"))
-        A = hom_data.T @ hom_data + Lambda*torch.eye(hom_data.size(1),device=hom_data.device)
+        regularizer = Lambda*torch.eye(hom_data.size(1),device=hom_data.device)
+        regularizer [-1,-1] = 0.0
+        A = hom_data.T @ hom_data + regularizer
         eigenvalues, eigenvectors = torch.linalg.eigh(A)
         reciprocal = torch.where(eigenvalues != 0, 1.0 / eigenvalues, eigenvalues) 
         D_plus = torch.diag(reciprocal)
