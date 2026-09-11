@@ -11,7 +11,7 @@ import argparse
 from enum import Enum
 import time
 
-from src.utils.data import get_data,Dataset
+from src.utils.data import get_data,ClassificationDataset
 
 
 class PCA_Matrix:
@@ -102,7 +102,7 @@ def get_profiler(device:str,algorithm:PCA_Algorithm):
 if __name__ == "__main__":
     # User input
     parser = argparse.ArgumentParser(description="Decision Tree classification")
-    parser.add_argument('--dataset', type=str,choices = [d.name for d in Dataset], default='WINE', help='Name of dataset to be used')
+    parser.add_argument('--dataset', type=str,choices = [d.name for d in ClassificationDataset], default='WINE', help='Name of dataset to be used')
     parser.add_argument('--n', type=int, default=3, help='Number of components to keep')
     parser.add_argument('--algorithm', type=str, choices=[a.name for a in PCA_Algorithm], default='vanilla', help='Which algorithm to use to learn the SVM halfspace')
     parser.add_argument('--profile', action='store_true', help='Whether to profile the code using the pytorch profiler')
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     parser.add_argument('--device', type=str, default='cpu',choices=['cpu','cuda'] , help='cpu or cuda')
     parser.add_argument('--sweep', action='store_true', help='Sweep through values of k')
     args = parser.parse_args()
-    dataset_name = Dataset[args.dataset]
+    dataset_name = ClassificationDataset[args.dataset]
     algorithm = PCA_Algorithm[args.algorithm]
     n = args.n
     to_profile = args.profile
